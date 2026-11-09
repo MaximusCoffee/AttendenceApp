@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>출석체크</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6f1;--card:#fff;--ink:#1f2a24;--sub:#6b7a70;--line:#dbe3da;--ok:#2f7d57;--okbg:#e3f1e8;--no:#c2410c;--nobg:#fde8dc;--room:#4b5fc7;--roombg:#e6e9fa;--r:12px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121815;--card:#1b231f;--ink:#e8efe9;--sub:#93a498;--line:#2c3832;--ok:#6fcf9b;--okbg:#1e3a2b;--no:#ff9a66;--nobg:#42261a;--room:#9aa8ff;--roombg:#262c52}}
+:root[data-theme="dark"]{--bg:#121815;--card:#1b231f;--ink:#e8efe9;--sub:#93a498;--line:#2c3832;--ok:#6fcf9b;--okbg:#1e3a2b;--no:#ff9a66;--nobg:#42261a;--room:#9aa8ff;--roombg:#262c52}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--sub);font-size:14px;margin:0 0 12px;min-height:21px}
+.bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:var(--r);padding:10px 14px;min-height:44px}
+button.primary{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.primary{color:#0d1a13}}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.seg button{flex:1;border:0;border-radius:0}
+.seg button.on{background:var(--ink);color:var(--bg);font-weight:700}
+.sec{font-size:15px;font-weight:700;margin:18px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.stu{position:relative;text-align:center;padding:12px 4px;border-radius:var(--r);background:var(--okbg);border:1.5px solid transparent;color:var(--ok);font-weight:500;min-height:60px;cursor:pointer;user-select:none}
+.stu.room{border-color:var(--room)}
+.stu.abs{background:var(--nobg);color:var(--no);font-weight:700}
+.stu.abs .nm{text-decoration:line-through}
+.stu.abs.ad{opacity:.6}
+.stu.go{box-shadow:0 0 0 2px var(--room)}
+.stu small{display:block;font-size:11px;font-weight:500;line-height:1.3}
+.stu small.tg{color:var(--room)}
+.stu.dn{box-shadow:0 0 0 2px var(--line)}
+.stu small.tg.dn{color:var(--sub)}
+.stu .x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;font-size:14px;line-height:1;background:var(--card);color:var(--no);border-color:var(--no)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:18px}
+.panel h2{font-size:15px;margin:0 0 8px}
+pre{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font:inherit;font-size:16px;line-height:1.6;margin:0 0 12px}
+.add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:12px;background:var(--card);border:1px dashed var(--line);border-radius:var(--r)}
+.add input[type=text]{flex:1 1 140px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+input[type=date]{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;margin-bottom:10px}
+.rr{display:flex;gap:8px;align-items:center;margin-top:8px}.rr b{flex:0 0 76px;font-size:14px}.rr input{flex:1;min-width:0;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+#toasts{position:fixed;left:0;right:0;top:0;z-index:50;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 0;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;max-width:560px;margin:0 auto;width:100%;background:var(--ink);color:var(--bg);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.toast.u{background:#b43a0a;color:#fff}
+.toast div{flex:1}.toast b{display:block;font-size:16px}.toast span{font-size:13px;opacity:.85}
+.toast button{min-height:40px;border:0;background:var(--bg);color:var(--ink)}
+.tr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.tr b{flex:0 0 64px;font-size:14px}.tr input{font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;width:120px}
+.tr small{flex-basis:100%;font-size:12px;color:var(--sub);min-height:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>출석체크</h1>
+<div class="seg" id="tabs"><button id="tb0" class="on">출석</button><button id="tb1">수업 시간</button></div>
+<div id="t0">
+<input type="date" id="dt" aria-label="날짜">
+<div class="seg">
+  <button id="m0" class="on">결석 체크</button>
+  <button id="m1">1번방 확인</button>
+</div>
+<p class="sub" id="hint"></p>
+<div class="bar">
+  <button id="edit">학생 관리</button>
+  <button id="reset">새 출석 시작</button>
+</div>
+
+<div class="sec">우리 반 (2번방)</div>
+<div class="grid" id="g0"></div>
+<div class="sec">1번방에서 온 학생</div>
+<div class="grid" id="g1"></div>
+<div class="panel" id="rs" hidden></div>
+
+<form class="add" id="addbox" hidden onsubmit="return false">
+  <input type="text" id="nm" placeholder="새 학생 이름" autocomplete="off">
+  <button class="primary" id="addbtn" type="button">우리 반에 추가</button>
+  <button id="add1" type="button" style="border-color:var(--room);color:var(--room);font-weight:700">1번방에 추가</button>
+</form>
+
+<div class="panel">
+  <h2>결과</h2>
+  <pre id="out"></pre>
+  <button class="primary" id="copy">결과 복사</button>
+</div>
+</div>
+<div id="t1" hidden>
+<p class="sub" style="min-height:0">출석 시간을 등록하면 50분 수업이 끝나기 5분 전, 2분 전에 학생별로 팝업이 뜨요. 이 페이지를 열어둔 동안에만 알려줘요.</p>
+<div class="bar"><button id="nowall">시간 없는 학생 모두 지금으로 등록</button> <button id="alarmcopy">폰 알람 요청 문구 복사</button></div>
+<div id="tl"></div>
+</div>
+</main>
+<div id="toasts"></div>
+<script>
+var D0="이예서2,금주아,한연서,박하랑,안시현,송가림,안은서,전민,이효림,김나현,송채영,이경민,전선율,송윤찬,황선우,이지후,김소율".split(",");
+var D1="윤서아,윤서진,윤서희,임서아,주하영,황지우,김태희,이서영,김주승,임이랑,김지율,김시윤,정우현,김주원,김서현".split(",");
+var EXC="임이랑,김지율,김시윤,정우현,김주원,김서현".split(",");
+var KEY="attendance-v1",S=null,editing=false,mode=0;
+function defR(){return D0.map(function(n){return{n:n,r:0}}).concat(D1.map(function(n){return{n:n,r:1}}))}
+function today(){var d=new Date(),p=function(n){return(n<10?"0":"")+n};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
+function dstr(){var p=(S.date||"").split("-");if(p.length<3)return "";var d=new Date(+p[0],+p[1]-1,+p[2]);return (+p[1])+"월 "+(+p[2])+"일("+"일월화수목금토".charAt(d.getDay())+")"}
+function ren(){if(!S.date)S.date=today();if(!S.done)S.done=[];if(!S.adone)S.adone=[];if(!S.reason)S.reason={};if(!S.times)S.times={};if(!S.fired)S.fired={};if(!S.roster.some(function(s){return s.n==="김소율"}))S.roster.push({n:"김소율",r:0});S.roster.forEach(function(s){if(s.n==="이예서")s.n="이예서2"});["abs","go"].forEach(function(k){S[k]=S[k].map(function(n){return n==="이예서"?"이예서2":n})});save()}
+function load(){var o=null;try{var v=localStorage.getItem(KEY);if(v)o=JSON.parse(v)}catch(e){}
+ if(o&&o.mig===5&&o.roster){S=o;if(!S.go)S.go=[];ren();if(S.date!==today()){S.date=today();S.abs=[];S.go=[];S.done=[];S.adone=[];S.reason={};S.times={};S.fired={};save()}return}
+ S={mig:5,roster:defR(),abs:[],go:[],done:[],adone:[],reason:{},times:{},fired:{},date:today()};
+ if(o&&o.abs){S.abs=o.abs.filter(function(n){return S.roster.some(function(s){return s.n===n})})}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}syncA()}
+function syncA(){try{if(!window.Android||!S||!S.times)return;var out=[];
+ S.roster.forEach(function(s,k){var t=S.times[s.n];if(!t||has(S.abs,s.n))return;var e=endOf(t).getTime();
+  [[5,1],[2,2]].forEach(function(a){var at=e-a[0]*60000;if(at>Date.now())out.push({id:(k+1)*10+a[1],at:at,t:s.n+" \u00b7 \uc218\uc5c5 \uc885\ub8cc "+a[0]+"\ubd84 \uc804",x:"\uc885\ub8cc "+hm(new Date(e))})})});
+ window.Android.setAlarms(JSON.stringify(out))}catch(e){}}
+function has(a,n){return a.indexOf(n)>-1}
+function names(f){return S.roster.filter(f).map(function(s){return s.n})}
+function render(){
+ ["g0","g1"].forEach(function(id,k){
+  var g=document.getElementById(id);g.innerHTML="";
+  S.roster.filter(function(s){return s.r===k}).forEach(function(s){
+   var a=has(S.abs,s.n),o=has(S.go,s.n);
+   var b=document.createElement("div");b.className="stu"+(k?" room":"")+(a?(has(S.adone,s.n)?" abs ad":" abs"):"")+(o?(has(S.done,s.n)?" go dn":" go"):"");
+   b.setAttribute("role","button");b.tabIndex=0;
+   var nm=document.createElement("span");nm.className="nm";nm.textContent=s.n;b.appendChild(nm);
+   if(a){var t=document.createElement("small");t.textContent=has(S.adone,s.n)?"결석 확인됨":"결석";b.appendChild(t)}
+   var dn=has(S.done,s.n);if(o){var u=document.createElement("small");u.className="tg"+(dn?" dn":"");u.textContent=dn?"확인됨":"확인필요";b.appendChild(u)}
+   b.onclick=function(){toggle(s.n)};
+   b.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle(s.n)}};
+   if(editing){var x=document.createElement("button");x.className="x";x.textContent="×";x.setAttribute("aria-label",s.n+" 삭제");
+    x.onclick=function(e){e.stopPropagation();
+     if(x.dataset.a!=="1"){x.dataset.a="1";x.textContent="삭제";x.style.width="auto";x.style.padding="0 8px";x.style.borderRadius="12px";return}
+     S.roster=S.roster.filter(function(t){return t.n!==s.n});S.abs=S.abs.filter(function(a){return a!==s.n});S.go=S.go.filter(function(a){return a!==s.n});S.done=S.done.filter(function(a){return a!==s.n});S.adone=S.adone.filter(function(a){return a!==s.n});delete S.reason[s.n];delete S.times[s.n];save();render()};
+    b.appendChild(x)}
+   g.appendChild(b)})});
+ var rs=document.getElementById("rs");rs.innerHTML="";var ad=names(function(s){return has(S.adone,s.n)});rs.hidden=!ad.length;
+ if(ad.length){var h=document.createElement("h2");h.textContent="결석 확인됨";rs.appendChild(h);
+  ad.forEach(function(n){var r=document.createElement("div");r.className="rr";var l=document.createElement("b");l.textContent=n;var i=document.createElement("input");i.type="text";i.placeholder="사유 (없어도 됨)";i.value=S.reason[n]||"";
+   i.oninput=function(){S.reason[n]=i.value;save();document.getElementById("out").textContent=result()};
+   r.appendChild(l);r.appendChild(i);rs.appendChild(r)})}
+ renderT();document.getElementById("addbox").hidden=!editing;
+ document.getElementById("edit").textContent=editing?"관리 끝내기":"학생 관리";
+ document.getElementById("m0").className=mode===0?"on":"";
+ document.getElementById("m1").className=mode===1?"on":"";
+ document.getElementById("hint").textContent=mode===0?"결석한 학생을 눌러주세요. 한 번 더 누르면 확인됨(사유는 아래에 선택 입력), 또 누르면 취소.":"1번방 갔는지 확인: 한 번 누르면 확인필요, 두 번은 확인됨(결과에서 제외), 세 번은 취소.";
+ document.getElementById("dt").value=S.date;document.getElementById("out").textContent=result();
+}
+function toggle(n){if(mode===0){if(!has(S.abs,n))S.abs.push(n);else if(!has(S.adone,n))S.adone.push(n);else{S.abs.splice(S.abs.indexOf(n),1);S.adone.splice(S.adone.indexOf(n),1);delete S.reason[n]}}else if(!has(S.go,n))S.go.push(n);else if(!has(S.done,n))S.done.push(n);else{S.go.splice(S.go.indexOf(n),1);S.done.splice(S.done.indexOf(n),1)}save();render()}
+function result(){
+ var abs=names(function(s){return has(S.abs,s.n)&&EXC.indexOf(s.n)<0&&!has(S.adone,s.n)});
+ var room=names(function(s){return s.r===1&&!has(S.abs,s.n)&&!has(S.go,s.n)});
+ var go=names(function(s){return has(S.go,s.n)&&!has(S.done,s.n)});var rsn=names(function(s){return has(S.adone,s.n)});
+ return dstr()+"\n결석 "+abs.length+"명\n"+(abs.length?abs.join(", "):"없음")+(rsn.length?"\n\n결석 확인됨 "+rsn.length+"명\n"+rsn.map(function(n){return S.reason[n]?n+" - "+S.reason[n]:n}).join("\n"):"")
+  +(room.length?"\n\n1번방에서 옴 "+room.length+"명\n"+room.join(", "):"")
+  +(go.length?"\n\n1번방 갔는지 확인 "+go.length+"명\n"+go.join(", "):"");
+}
+document.getElementById("dt").onchange=function(){if(this.value){S.date=this.value;save();render()}};
+document.getElementById("m0").onclick=function(){mode=0;render()};
+document.getElementById("m1").onclick=function(){mode=1;render()};
+document.getElementById("edit").onclick=function(){editing=!editing;render()};
+var rt=null;document.getElementById("reset").onclick=function(){var b=this;if(S.abs.length===0&&S.go.length===0&&Object.keys(S.times).length===0)return;
+ if(rt){clearTimeout(rt);rt=null;b.textContent="새 출석 시작";S.abs=[];S.go=[];S.done=[];S.adone=[];S.reason={};S.times={};S.fired={};S.date=today();save();render();return}
+ b.textContent="한 번 더 누르면 초기화";rt=setTimeout(function(){rt=null;b.textContent="새 출석 시작"},3000)};
+function addStu(room){
+ var ni=document.getElementById("nm"),v=ni.value.trim();if(!v)return;
+ if(S.roster.some(function(s){return s.n===v})){ni.value="";ni.placeholder="이미 있는 이름이에요 (동명이인은 숫자 붙이기)";return}
+ S.roster.push({n:v,r:room});ni.value="";save();render()}
+document.getElementById("addbtn").onclick=function(){addStu(0)};
+document.getElementById("add1").onclick=function(){addStu(1)};
+document.getElementById("copy").onclick=function(){
+ var t=result(),b=this;
+ function done(){b.textContent="복사됨";setTimeout(function(){b.textContent="결과 복사"},1500)}
+ function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a);done()}
+ try{navigator.clipboard.writeText(t).then(done,fb)}catch(e){fb()}};
+var CL=50;
+function pad(n){return(n<10?"0":"")+n}
+function hm(d){return pad(d.getHours())+":"+pad(d.getMinutes())}
+function endOf(t){var p=t.split(":"),d=new Date();d.setHours(+p[0],+p[1],0,0);return new Date(d.getTime()+CL*60000)}
+function setT(n,v){if(v)S.times[n]=v;else delete S.times[n];delete S.fired[n+"|5"];delete S.fired[n+"|2"];save();renderT()}
+function renderT(){var el=document.getElementById("tl");el.innerHTML="";
+ S.roster.filter(function(s){return !has(S.abs,s.n)}).forEach(function(s){
+  var r=document.createElement("div");r.className="tr";
+  var b=document.createElement("b");b.textContent=s.n;
+  var i=document.createElement("input");i.type="time";i.value=S.times[s.n]||"";i.onchange=function(){setT(s.n,i.value)};
+  var nb=document.createElement("button");nb.textContent="지금";nb.onclick=function(){setT(s.n,hm(new Date()))};
+  var xb=document.createElement("button");xb.textContent="×";xb.setAttribute("aria-label",s.n+" 시간 지우기");xb.onclick=function(){setT(s.n,"")};
+  var sm=document.createElement("small");sm.setAttribute("data-n",s.n);
+  r.appendChild(b);r.appendChild(i);r.appendChild(nb);r.appendChild(xb);r.appendChild(sm);el.appendChild(r)});
+ stat()}
+function stat(){var now=new Date();document.querySelectorAll("#tl small").forEach(function(sm){var n=sm.getAttribute("data-n"),t=S.times[n];if(!t){sm.textContent="";return}var e=endOf(t),m=Math.ceil((e-now)/60000);sm.textContent="종료 "+hm(e)+(m>0?" · "+m+"분 남음":" · 종료")})}
+function toast(n,msg,end,u){var c=document.getElementById("toasts"),t=document.createElement("div");t.className="toast"+(u?" u":"");
+ var d=document.createElement("div"),b=document.createElement("b"),sp=document.createElement("span");b.textContent=n+" · "+msg;sp.textContent="종료 시각 "+end;d.appendChild(b);d.appendChild(sp);
+ var ok=document.createElement("button");ok.textContent="확인";ok.onclick=function(){c.removeChild(t)};
+ t.appendChild(d);t.appendChild(ok);c.appendChild(t);try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}}
+function tick(){if(!S)return;var now=new Date();
+ S.roster.forEach(function(s){var t=S.times[s.n];if(!t||has(S.abs,s.n))return;var e=endOf(t),left=(e-now)/60000;
+  [[5,2,"수업 종료 5분 전"],[2,0,"수업 종료 2분 전"]].forEach(function(a){var k=s.n+"|"+a[0];if(left<=a[0]&&left>a[1]&&!S.fired[k]){S.fired[k]=1;save();toast(s.n,a[2],hm(e),a[0]===2)}})});
+ stat()}
+setInterval(tick,1000);
+function setTab(k){document.getElementById("t0").hidden=k!==0;document.getElementById("t1").hidden=k!==1;document.getElementById("tb0").className=k===0?"on":"";document.getElementById("tb1").className=k===1?"on":""}
+document.getElementById("tb0").onclick=function(){setTab(0)};
+document.getElementById("tb1").onclick=function(){setTab(1)};
+document.getElementById("nowall").onclick=function(){var t=hm(new Date());S.roster.forEach(function(s){if(!has(S.abs,s.n)&&!S.times[s.n]){S.times[s.n]=t;delete S.fired[s.n+"|5"];delete S.fired[s.n+"|2"]}});save();renderT()};
+function alarmText(){var g={};S.roster.forEach(function(s){var t=S.times[s.n];if(t&&!has(S.abs,s.n)){(g[t]=g[t]||[]).push(s.n)}});
+ var ks=Object.keys(g).sort();if(!ks.length)return "";
+ return "폰 알람 설정해줘. 수업 종료 5분 전, 2분 전 시각이야. 알람 이름에 학생 이름 넣어줘.\n"+ks.map(function(t){var e=endOf(t),a=new Date(e.getTime()-300000),b=new Date(e.getTime()-120000);return hm(a)+", "+hm(b)+" - "+g[t].join(", ")}).join("\n")}
+document.getElementById("alarmcopy").onclick=function(){var t=alarmText(),b=this;if(!t){b.textContent="등록된 시간이 없어요";setTimeout(function(){b.textContent="폰 알람 요청 문구 복사"},1500);return}
+ function done(){b.textContent="복사됨";setTimeout(function(){b.textContent="폰 알람 요청 문구 복사"},1500)}
+ function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a);done()}
+ try{navigator.clipboard.writeText(t).then(done,fb)}catch(e){fb()}};
+load();render();
+</script>
+</body>
+</html>
